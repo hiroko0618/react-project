@@ -1,0 +1,21 @@
+.field {
+  display: flex;
+}
+
+.right {
+  padding-left: 10px;
+}
+
+p {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 0px;
+}
+
+th, .yearCell {
+  text-align: center;
+}
+
+.error {
+  color: red;
+}
