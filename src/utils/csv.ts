@@ -1,18 +1,20 @@
 import Papa from 'papaparse';
+import { ExecutionResult } from '../types/props';
+import { getMessage } from '../messages/message';
 
-export const getCsvData = async (file: File): Promise<any[]> => {
+export const getCsvData = async (file: File): Promise<ExecutionResult> => {
   if (!isCsvFile(file.name)) {
-    console.error('CSV形式のファイルを選択してください。');
+    return { data: [], error: getMessage.dataType };
   }
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        resolve(results.data);
+        resolve({ data: results.data, error: ''});
       },
-      error: () => {
-        reject(new Error('csv parse error'));
+      error: (e) => {
+        reject({ data: [], error: e });
       }
     });
   });

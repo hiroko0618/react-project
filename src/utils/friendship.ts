@@ -1,5 +1,7 @@
 import { getCsvData } from './csv';
 import { getPowerset } from './powerset';
+import { ExecutionResult } from '../types/props';
+import { getMessage } from '../messages/message';
 
 export const getFriendshipScores = (subjects: string[], relation: any[], currentScore: number): any => {
   try {
@@ -7,7 +9,6 @@ export const getFriendshipScores = (subjects: string[], relation: any[], current
  
     const firstEl = subjects[0]; 
     const remainingEl = subjects.slice(1);
-    const size = subjects.length;
     let score = 0;
     
     for(let i = 0; i < subjects.length -1; i++) {
@@ -24,25 +25,29 @@ export const getFriendshipScores = (subjects: string[], relation: any[], current
   
     return 0;
   } catch(e) {
-    console.error('エラー詳細', e);
+    console.error(getMessage.showDetail, e);
     throw e;
   }
 }
 
-export const getFriendshipDatas = async (event: any): Promise<any[]> => {
+export const getFriendshipDatas = async (event: any): Promise<ExecutionResult> => {
   try {
     const target = event?.target.files[0] as File;
+    if (!target || target === null) {
+      return { data: [], error: getMessage.required }
+    }
+    
     const friendshipDatas = await getCsvData(target);
-    if (!friendshipDatas) return [];
+    if (!friendshipDatas || friendshipDatas.data === null || friendshipDatas.data.length === 0) { 
+      return { data: [], error: friendshipDatas.error }; 
+    };
 
-    const prefectures = Object.keys(friendshipDatas[0]).filter((key: any) => key !== 'x');
-    if (!prefectures) return [];
-
-    const groups = calcFriendshipLevel(prefectures, friendshipDatas, 0, 0);
-    return groups;
+    const prefectures = Object.keys(friendshipDatas.data[0]).filter((key: any) => key !== 'x');
+    const groups = calcFriendshipLevel(prefectures, friendshipDatas.data, 0, 0);
+    return { data:groups, error: '' };
   } catch (e) {
-    console.error('エラー詳細', e);
-    throw e;
+    console.error(getMessage.showDetail, e);
+    return { data: [], error: getMessage.getDatafailed }
   }
 }
 
@@ -61,7 +66,7 @@ const calcFriendshipLevel = (prefectures: string[], friendshipDatas: any[], coun
 	}
       });
     });
-    const scoreList: number[] = subset.map((data: any) => {
+    const scoreList: number[] = subset.map((data: any) => { 
       return getFriendshipScores(data, friendship, currentScore);
     });
     const maxScore = Math.max(...scoreList);
@@ -74,7 +79,7 @@ const calcFriendshipLevel = (prefectures: string[], friendshipDatas: any[], coun
     const nextGroups = calcFriendshipLevel(newPrefectures, friendshipDatas, count + 1, currentScore);
     return groups.concat(nextGroups);
   } catch (e) {
-    console.error('エラー詳細', e);
+    console.error(getMessage.showDetail, e);
     throw e;
   }
 }
